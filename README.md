@@ -1,150 +1,168 @@
-# YouTube Channel Audio Downloader & Multi-Language Transcriber
+# YouTube Channel Audio Downloader and Multi-Language Transcriber
 
-A Streamlit application that downloads audio from all videos in a specified YouTube channel (via handle or URL) and transcribes them using [OpenAI Whisper](https://github.com/openai/whisper). This tool supports multiple Indian languages and outputs the transcription (with timestamps) to CSV.
+This Streamlit application downloads audio from all videos on a specific YouTube channel (provided as a handle or URL) and transcribes them in one of several Indian languages using [OpenAI Whisper](https://github.com/openai/whisper). The transcriptions are saved in both CSV and a multi-sheet Excel file for easy reference.
 
 ## Table of Contents
-
-1. [Features](#features)  
-2. [Prerequisites](#prerequisites)  
-3. [Installation](#installation)  
-4. [Usage](#usage)  
-5. [Configuration & How It Works](#configuration--how-it-works)  
-6. [Limitations & Tips](#limitations--tips)  
-7. [Contributing](#contributing)  
-8. [License](#license)
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Arguments and Interface](#arguments-and-interface)
+- [Output Files](#output-files)
+- [Troubleshooting](#troubleshooting)
+- [License](#license)
 
 ---
 
 ## Features
 
-- **Handle/URL-based Channel Detection**: Accepts a YouTube channel handle like `@SangamTalks` or a URL like `https://www.youtube.com/@SangamTalks`.  
-- **Automatic Channel ID Resolution**: Converts the provided handle or URL into a channel ID for the YouTube Data API.  
-- **Batch Download of All Videos**: Iterates through the entire channel, downloading audio tracks using [yt-dlp](https://github.com/yt-dlp/yt-dlp).  
-- **Transcription with Whisper**: Uses the "large" Whisper model by OpenAI to transcribe audio in one of the following languages:
-  - Kannada (`kn`)
-  - Hindi (`hi`)
-  - Tamil (`ta`)
-  - Marathi (`mr`)
-  - Gujarati (`gu`)
-  - Punjabi (`pa`)
-  - Bengali (`bn`)
-- **Timestamped CSV Output**: Saves transcription segments (with start/end times) to CSV and provides a **Streamlit download button** for each file.
+1. **YouTube Handle/URL Parsing**  
+   Enter a YouTube handle (e.g., `@SangamTalks`) or URL (`https://www.youtube.com/@SangamTalks`), and the script will automatically derive the channel’s ID using the [YouTube Data API](https://developers.google.com/youtube/v3).
+
+2. **Multiple Language Support**  
+   The script supports transcribing audio in various Indian languages (e.g., Kannada, Hindi, Tamil, Marathi, Gujarati, Punjabi, Bengali), by mapping the human-readable language name to its Whisper-compatible code.
+
+3. **Audio Download**  
+   Uses [yt-dlp](https://github.com/yt-dlp/yt-dlp) to download the audio in MP3 format from YouTube videos (one channel at a time).
+
+4. **Transcription**  
+   Uses [OpenAI Whisper](https://github.com/openai/whisper) for automatic speech recognition (ASR). It supports the `base`, `small`, `medium`, `large` models, but the code is currently set up to use `turbo` (a locally installed model name; you can adjust as needed).
+
+5. **Result Packaging**  
+   - Generates a **CSV** transcription file per video.
+   - Optionally creates a **single multi-sheet Excel file** (XLSX) containing transcripts for all videos in one place.
+
+6. **Resumable**  
+   - If a video’s audio is already downloaded, it won’t download again.
+   - If a transcription CSV already exists for a video, it won’t transcribe again (useful for large batches).
 
 ---
 
-## Prerequisites
+## Tech Stack
 
-1. **Python 3.7+** (3.8 or higher recommended)  
-2. **Pip** for installing dependencies  
-3. **YouTube Data API Key**  
-   - Sign up at [Google Cloud Console](https://console.cloud.google.com/), enable the **YouTube Data API v3**, then retrieve your API key.  
-4. **FFmpeg**  
-   - Required by `yt-dlp` and Whisper for audio extraction and processing.  
-   - Install via your package manager (e.g., `brew install ffmpeg` on macOS, `sudo apt-get install ffmpeg` on Ubuntu), or download from [FFmpeg.org](https://ffmpeg.org/).
+- [Streamlit](https://streamlit.io/) — For the web interface.
+- [yt-dlp](https://github.com/yt-dlp/yt-dlp) — For downloading audio from YouTube.
+- [Whisper](https://github.com/openai/whisper) — For speech-to-text transcription.
+- [pandas](https://pandas.pydata.org/) — For data handling, CSV reading/writing, and Excel exports.
+- [openpyxl](https://openpyxl.readthedocs.io/en/stable/) — For creating multi-sheet Excel files.
+- [google-api-python-client](https://github.com/googleapis/google-api-python-client) — For making calls to the YouTube Data API.
 
 ---
 
 ## Installation
 
-1. **Clone** or **download** this repository:
-   ```bash
-   git clone https://github.com/yourusername/yourrepo.git
-   cd yourrepo
-   ```
+1. **Clone the repository** (or copy the code files):
+    ```bash
+    git clone https://github.com/your-username/your-repo-name.git
+    cd your-repo-name
+    ```
 
-2. **Create & Activate** a virtual environment (optional but recommended):
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # macOS/Linux
-   # or
-   venv\Scripts\activate     # Windows
-   ```
+2. **Create a virtual environment (recommended)**:
+    ```bash
+    python -m venv venv
+    source venv/bin/activate    # On macOS/Linux
+    # Or venv\Scripts\activate  # On Windows
+    ```
 
-3. **Install** required Python packages:
-   ```bash
-   pip install -r requirements.txt
-   ```
-   > Example `requirements.txt` might include:
-   > ```
-   > streamlit
-   > yt-dlp
-   > openai-whisper
-   > pandas
-   > google-api-python-client
-   > ffmpeg-python
-   > openpyxl
-   > ```
-   Adjust as needed.
+3. **Install dependencies**:
+    ```bash
+    pip install -r requirements.txt
+    ```
+    Where `requirements.txt` might include:
+    ```txt
+    streamlit
+    yt-dlp
+    openai-whisper
+    google-api-python-client
+    openpyxl
+    pandas
+    ```
+    (Adjust your `requirements.txt` to match exactly the libraries/versions you need.)
+
+4. **Obtain a YouTube Data API key** from [Google Cloud Console](https://console.cloud.google.com/).  
+   - Create a project, enable the YouTube Data API v3, and create an API key.
+   - Copy the key for use in the application.
 
 ---
 
 ## Usage
 
 1. **Run the Streamlit app**:
-   ```bash
-   streamlit run app.py
-   ```
-2. **Open** the URL displayed in your terminal (e.g., `http://localhost:8501`) in your web browser.
-3. **Enter** the required information in the interface:
-   - **Channel Handle/URL**: Something like `@SangamTalks` or `https://www.youtube.com/@SangamTalks`.  
-   - **YouTube Data API Key**: Paste your API key here.  
-   - **Select Language** for transcription: One of the supported languages (Kannada, Hindi, Tamil, Marathi, Gujarati, Punjabi, Bengali).  
-   - **Process Channel**: Click the **Process Channel** button.
-4. **Wait** as the app:
-   - Resolves the handle/URL to get the channel ID.  
-   - Retrieves all video IDs in the channel.  
-   - Downloads audio for each video via `yt-dlp`.  
-   - Transcribes the audio using the Whisper "large" model.  
-   - Saves transcripts (with timestamps) to CSV.  
-   - Displays a **download button** to retrieve each CSV file.
+    ```bash
+    streamlit run your_script.py
+    ```
+   Replace `your_script.py` with the filename containing the provided code (if it’s something else).
+
+2. **Open your browser**  
+   After starting Streamlit, it will usually open `http://localhost:8501` automatically. If not, open that URL manually.
 
 ---
 
-## Configuration & How It Works
+## Arguments and Interface
 
-### 1. Channel Handle to Channel ID
-- The app uses the YouTube Data API (search endpoint) to find the channel ID matching the given handle or URL path (e.g. `@SangamTalks`).  
+The Streamlit interface provides:
 
-### 2. Fetching All Videos
-- A loop calls `youtube.search().list()` with `channelId`, retrieving up to 50 videos per page until no more pages remain.  
+1. **YouTube Channel Handle/URL**  
+   - Examples: `@SangamTalks`, `https://www.youtube.com/@SangamTalks`.  
+   - **Note**: Must begin with an `@` if typed directly or must be a valid YouTube channel URL.
 
-### 3. Downloading Audio
-- For each video ID, `yt-dlp` downloads the **best audio** as an MP3 file.
+2. **YouTube Data API Key**  
+   - Paste your API key to authenticate queries to the YouTube Data API.
 
-### 4. Transcribing with Whisper
-- The app loads OpenAI’s Whisper model in “large” mode (can be changed to smaller models if you prefer).  
-- Depending on the selected language code (e.g. "ta" for Tamil), Whisper will transcribe.  
+3. **Select Transcription Language**  
+   - A dropdown menu with supported Indian languages (Kannada, Hindi, Tamil, Marathi, Gujarati, Punjabi, Bengali).
 
-### 5. Output to CSV
-- Each transcription is saved in a CSV file named `{video_id}_transcription.csv` under the `audio_files` folder.  
-- CSV includes columns: Video ID, Start Time (s), End Time (s), and Transcript.  
-
----
-
-## Limitations & Tips
-
-1. **API Quota**: Fetching all videos from a large channel consumes more YouTube Data API quota. Watch your limits.  
-2. **Time & Storage**:
-   - Downloading + transcribing many videos can take considerable time and disk space, especially using the "large" Whisper model. Consider smaller models if you need faster processing.  
-   - This is especially true for lengthy channels, so plan accordingly.  
-3. **Languages**: The current code supports only certain Indic languages. You can easily add more languages by updating the mapping in `get_language_code()`.  
-4. **FFmpeg Installation**: Ensure FFmpeg is installed and available in your PATH, otherwise `yt-dlp` or Whisper might fail.  
-5. **Local vs Remote Deployment**: If you deploy on a remote server (e.g., Streamlit Cloud, Heroku), be mindful of memory and CPU constraints.  
+4. **Process Channel**  
+   - Clicking this button initiates:
+     - Resolving the channel ID via the handle/URL.
+     - Fetching **all** video IDs from the channel.
+     - For each video:
+       - Downloading the audio if not already present.
+       - Transcribing if a CSV for that video doesn’t already exist.
 
 ---
 
-## Contributing
+## Output Files
 
-We’d love your help! Please submit bug reports and pull requests via [GitHub Issues](https://github.com/yourusername/yourrepo/issues). Make sure to run tests and follow our code style guidelines before submitting changes.
+1. **Audio Files**  
+   - Located in the folder `./audio_files`.  
+   - Each file is named as `<video_id>.mp3`.
+
+2. **Per-Video CSV**  
+   - Also stored in `./audio_files`.  
+   - Each file is named as `<video_id>_transcription.csv`.
+   - Contains columns for: `["Video ID", "Start Time (s)", "End Time (s)", "Transcript"]`.
+
+3. **Multi-Sheet Excel**  
+   - Once all videos are processed, the script compiles all transcripts into a single Excel file located at `./audio_files/all_transcripts_multisheet.xlsx`.
+   - Each video’s transcript is in a separate worksheet named after the video ID (truncated to 31 chars if needed).
+
+---
+
+## Troubleshooting
+
+1. **Invalid YouTube Handle**  
+   - Make sure your handle is in the format `@channelName` or you have a valid URL like `https://www.youtube.com/@channelName`.
+
+2. **Missing or Invalid YouTube Data API Key**  
+   - Ensure the key is valid and you have enabled the YouTube Data API in your Google Cloud project.
+
+3. **Large Channels**  
+   - For channels with hundreds or thousands of videos, note that the process might be slow. You can stop and re-run any time. Already-downloaded audio files and transcripts won’t be redone.
+
+4. **Memory or Disk Space**  
+   - Whisper transcription, especially if you use large models, can be memory-intensive.  
+   - Ensure you have sufficient disk space for audio files and the final Excel file.
+
+5. **Model Choice**  
+   - The sample code uses `whisper.load_model("turbo")`. If you face issues with model names, replace `"turbo"` with `"small"`, `"medium"`, `"large"`, or any other locally available model.  
 
 ---
 
 ## License
 
-This project is licensed under the [MIT License](LICENSE). See the [LICENSE](LICENSE) file for details.
+This project is distributed under the [MIT License](LICENSE.md). Feel free to modify and use as per your needs.
 
 ---
 
-**Happy Transcribing!** 
-
-If you have any questions or issues, please [open a GitHub issue](https://github.com/yourusername/yourrepo/issues) or reach out to the repository maintainers.  
+**Enjoy the streamlined process of downloading and transcribing audio from entire YouTube channels!** If you have any issues, please open an issue or contribute a pull request.

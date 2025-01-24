@@ -69,8 +69,10 @@ A Streamlit application that downloads audio from all videos in a specified YouT
    > streamlit
    > yt-dlp
    > openai-whisper
+   > pandas
    > google-api-python-client
    > ffmpeg-python
+   > openpyxl
    > ```
    Adjust as needed.
 

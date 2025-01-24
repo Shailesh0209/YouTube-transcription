@@ -1,7 +1,3 @@
-Below is a sample **README.md** that provides a clear, concise overview of how to use and set up your Streamlit-based YouTube transcription app. Feel free to customize it further for your specific project or environment.
-
----
-
 # YouTube Channel Audio Downloader & Multi-Language Transcriber
 
 A Streamlit application that downloads audio from all videos in a specified YouTube channel (via handle or URL) and transcribes them using [OpenAI Whisper](https://github.com/openai/whisper). This tool supports multiple Indian languages and outputs the transcription (with timestamps) to CSV.
